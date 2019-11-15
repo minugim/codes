@@ -122,6 +122,7 @@ class main_ui(QtWidgets.QWidget):
         self._client.number_of_widgets = self._client.number_of_widgets - 1
         if not tmp:
             self._client.msg_list.append('close_thread')
+            self._client.msg_list.append(self._client.my_id)
             self._client.client_send()
         self.close()
 

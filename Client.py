@@ -8,6 +8,8 @@ import base64
 import pickle
 from PIL import Image
 
+
+# [ 'img_send', id , file_size , pic_number ]
 '''
 msg_list format:
 login_info : [instruction, args]
@@ -22,6 +24,7 @@ class client(QThread):
         self.host = socket.gethostname()
         self.host_ip = socket.gethostbyname(self.host)
         self.port = 5555
+        self.ftp_port = 6666
         self.instruction = ' '
         self.msg_list = []
         self.number_of_widgets = 0
@@ -34,7 +37,43 @@ class client(QThread):
         print('connecting to %d port' % self.port)
         self.server_addr = (self.host, self.port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.connect(self.server_addr)
+
+    def client_ftp_send(self,filepath):
+        self.ftp_server_addr = (self.host, self.ftp_port)
+        self.ftp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.ftp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.client_send()
+        self.ftp_sock.connect(self.ftp_server_addr)
+
+        f = open(filepath,'rb')
+        data=f.read()
+        f.close()
+        self.ftp_sock.send(data)
+        self.ftp_sock.close()
+        self.client_recv()
+
+    def client_ftp_recv(self):
+        self.ftp_server_addr = (self.host, self.ftp_port)
+        self.ftp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.ftp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        pic_index = self.msg_list[2]
+        self.client_send()
+        self.ftp_sock.connect(self.ftp_server_addr)
+        print('받을게요')
+        size = pickle.loads(self.ftp_sock.recv(1024))
+        recvd=0
+        fwrite = open('tmp' + str(pic_index) + '.jpg', 'wb')
+        while size > recvd:
+            data = self.ftp_sock.recv(4096)
+            tmp = len(data)
+            recvd = recvd + tmp
+            fwrite.write(data)
+            print(tmp)
+        fwrite.close()
+        self.ftp_sock.close()
+        self.client_recv()
 
     def client_send(self):
         print("sending {0}".format(self.msg_list))
@@ -54,7 +93,8 @@ class client(QThread):
         f = open(file_path, 'rb')
         data = f.read()
         self.sock.send(pickle.dumps(len(data)))
-        self.sock.sendall(data)
+        print(len(data))
+        self.sock.send(data)
         f.close()
         print('보냄')
 
@@ -87,6 +127,12 @@ class client(QThread):
         # 저장할 파일 Type : JPEG, PNG 등
         # 저장할 때 Quality 수준 : 보통 95 사용
         resize_image.save(target_image, mode='jpg', quality=95)
+
+    def img_size(self,filepath):
+        f = open(filepath,'rb')
+        size = len(f.read())
+        f.close()
+        return size
 
     def run(self):
         while True:

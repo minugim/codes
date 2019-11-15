@@ -174,12 +174,17 @@ class join_ui(QtWidgets.QWidget,QtCore.QObject):
     # 파일 경로를 찾으면 copy를 생성하고 join_button_clicked가 호출되면 사진정보도 보내줌
     def find_button_clicked(self):
         try:
-            fname = QFileDialog.getOpenFileName(self, 'Open file', './')
+            fname = QFileDialog.getOpenFileName(self, 'Open  file', './')
+            if not fname:
+                return
             self.editline_filepath.setText(fname[0])
+
             if os.path.getsize(fname[0]) == 0:
                 QtWidgets.QMessageBox.about(self, 'fail', 'select another file')
                 return
-        except FileNotFoundError:
+
+        except Exception as e:
+            print(e)
             return
 
     def join_button_clicked(self):
@@ -195,7 +200,7 @@ class join_ui(QtWidgets.QWidget,QtCore.QObject):
         else:
             self._client.msg_list.append('여성')
 
-        tmp_list=copy.deepcopy(self._client.msg_list)
+        tmp_list = copy.deepcopy(self._client.msg_list)
         self._client.msg_list.insert(0,'join_info')
         if self.editline_filepath.text() and self.editline_id.text() and self.editline_password.text() and self.editline_residence.text() and self.editline_hobby.text() and self.editline_age.text() and self.editline_nickname.text() :
             self._client.client_send()
@@ -216,26 +221,29 @@ class join_ui(QtWidgets.QWidget,QtCore.QObject):
             return
         print(self._client.msg_list_server[1])
 
+
         self._client.img_resize(self.editline_filepath.text())
         self._client.msg_list.append('img_send')
         self._client.msg_list.append(self.editline_id.text())
+        self._client.msg_list.append(self._client.img_size('resized.jpg'))
         self._client.msg_list.append(1)
-        self._client.client_send()
-        self._client.img_send('resized.jpg')
-        self._client.client_recv()
+        self._client.client_ftp_send('resized.jpg')
+        #self._client.img_send('resized.jpg')
         fp = open('resized.jpg','rb')
         f = open(os.getcwd()+'/id_'+self.editline_id.text()+'/me1.jpg','wb')
         f.write(fp.read())
         f.close()
         fp.close()
 
+        self._client.img_resize('base_image.png')
         self._client.msg_list.append('img_send')
         self._client.msg_list.append(self.editline_id.text())
+        self._client.msg_list.append(self._client.img_size('resized.jpg'))
         self._client.msg_list.append(2)
-        self._client.client_send()
-        self._client.img_send('base_image.jpg')
-        self._client.client_recv()
-        fp = open('base_image.jpg', 'rb')
+        self._client.client_ftp_send('resized.jpg')
+        #self._client.img_send('base_image.jpg')
+        #self._client.client_recv()
+        fp = open('resized.jpg', 'rb')
         fread = fp.read()
         fp.close()
         f = open(os.getcwd() + '/id_' + self.editline_id.text() + '/me2.jpg', 'wb')
@@ -244,10 +252,11 @@ class join_ui(QtWidgets.QWidget,QtCore.QObject):
 
         self._client.msg_list.append('img_send')
         self._client.msg_list.append(self.editline_id.text())
+        self._client.msg_list.append(self._client.img_size('resized.jpg'))
         self._client.msg_list.append(3)
-        self._client.client_send()
-        self._client.img_send('base_image.jpg')
-        self._client.client_recv()
+        self._client.client_ftp_send('resized.jpg')
+        #self._client.img_send('base_image.jpg')
+        #self._client.client_recv()
         f = open(os.getcwd() + '/id_' + self.editline_id.text() + '/me3.jpg', 'wb')
         f.write(fread)
         f.close()

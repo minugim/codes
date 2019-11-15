@@ -172,20 +172,36 @@ class profile_ui(QtWidgets.QWidget, QtCore.QObject):
             self._client.img_resize(self.editline_filepath.text())
             fread = open('resized.jpg','rb')
             fwrite = open(self._client.my_dir+'/me'+str(self.tabWidget.currentIndex()+1)+'.jpg','wb')
-            fwrite.write(fread.read())
+            file_data = fread.read()
+            file_size = len(file_data)
+            fwrite.write(file_data)
             fread.close()
             fwrite.close()
             self._client.msg_list.append('img_send')
             self._client.msg_list.append(self._client.my_id)
+            self._client.msg_list.append(file_size)
             self._client.msg_list.append(self.tabWidget.currentIndex()+1)
             print('이미지 보내기')
             print(self._client.msg_list)
-            self._client.client_send()
-            self._client.img_send('resized.jpg')
-            self._client.client_recv()
+            self._client.client_ftp_send('resized.jpg')
+            #self._client.img_send('resized.jpg')
+            #self._client.client_recv()
             self.pic_1.setPixmap(QtGui.QPixmap(self._client.my_dir + '/me1.jpg'))
             self.pic_2.setPixmap(QtGui.QPixmap(self._client.my_dir + '/me2.jpg'))
             self.pic_3.setPixmap(QtGui.QPixmap(self._client.my_dir + '/me3.jpg'))
+
+    def initiate_profile(self):
+        self.pic_1.setPixmap(QtGui.QPixmap(self._client.my_dir + '/' + 'me1.jpg'))
+        self.pic_2.setPixmap(QtGui.QPixmap(self._client.my_dir + '/' + 'me2.jpg'))
+        self.pic_3.setPixmap(QtGui.QPixmap(self._client.my_dir + '/' + 'me3.jpg'))
+        f = open(self._client.my_dir + '/my_profile.txt', 'rb')
+        profile = pickle.loads(f.read())
+        f.close()
+        self.editline_nickname.setText(profile[5])
+        self.editline_password.setText(profile[1])
+        self.editline_residence.setText(profile[2])
+        self.editline_hobby.setText(profile[3])
+        self.editline_age.setText(profile[4])
 
     def back_button_clicked(self):
         '''
@@ -201,13 +217,15 @@ class profile_ui(QtWidgets.QWidget, QtCore.QObject):
         self.close()
 
     def find_button_clicked(self):
-        #print(self.tabWidget.currentIndex())
-        fname = QFileDialog.getOpenFileName(self, 'Open file', './')
-        self.editline_filepath.setText(fname[0])
-        if os.path.getsize(fname[0]) == 0:
-            QtWidgets.QMessageBox.about(self, 'fail', 'select another file')
+        try:
+            fname = QFileDialog.getOpenFileName(self, 'Open file', './')
+            self.editline_filepath.setText(fname[0])
+            if os.path.getsize(fname[0]) == 0:
+                QtWidgets.QMessageBox.about(self, 'fail', 'select another file')
+                return
+        except Exception as e:
+            print(e)
             return
-
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
