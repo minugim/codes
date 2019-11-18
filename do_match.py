@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import pickle
+import os
 
 class do_match_ui(QtWidgets.QWidget):
     start_main_signal = QtCore.pyqtSignal()
@@ -19,6 +20,9 @@ class do_match_ui(QtWidgets.QWidget):
         self.setupUi()
 
     def setupUi(self):
+        # disable (but not hide) close button
+        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
+
         self.setObjectName("Form")
         self.resize(750, 520)
 
@@ -74,6 +78,9 @@ class do_match_ui(QtWidgets.QWidget):
         self.label_hobby = QtWidgets.QLabel(self.groupBox_2)
         self.label_hobby.setGeometry(QtCore.QRect(40, 150, 61, 16))
         self.label_hobby.setObjectName("label_hobby")
+        self.label_gender = QtWidgets.QLabel(self.groupBox_2)
+        self.label_gender.setGeometry(QtCore.QRect(40, 250, 61, 16))
+        self.label_gender.setObjectName("label_gender")
         self.label_nickname_text = QtWidgets.QLabel(self.groupBox_2)
         self.label_nickname_text.setGeometry(QtCore.QRect(150, 50, 56, 12))
         self.label_nickname_text.setObjectName("label")
@@ -86,6 +93,9 @@ class do_match_ui(QtWidgets.QWidget):
         self.label_age_text = QtWidgets.QLabel(self.groupBox_2)
         self.label_age_text.setGeometry(QtCore.QRect(150, 200, 56, 12))
         self.label_age_text.setObjectName("label_age_text")
+        self.label_gender_text = QtWidgets.QLabel(self.groupBox_2)
+        self.label_gender_text.setGeometry(QtCore.QRect(150, 250, 56, 12))
+        self.label_gender_text.setObjectName("label_age_text")
         self.like_button = QtWidgets.QPushButton(self.groupBox)
         self.like_button.setGeometry(QtCore.QRect(150, 370, 75, 41))
         self.like_button.setObjectName("like_button")
@@ -123,6 +133,7 @@ class do_match_ui(QtWidgets.QWidget):
             self.label_residence_text.setText(self._client.msg_list_server[3][2])
             self.label_hobby_text.setText(self._client.msg_list_server[3][3])
             self.label_age_text.setText(self._client.msg_list_server[3][4])
+            self.label_gender_text.setText(self._client.msg_list_server[3][5])
 
             self.id_yours = self._client.msg_list_server[3][0]
             # ['img_recv',상대id,사진index]
@@ -145,26 +156,89 @@ class do_match_ui(QtWidgets.QWidget):
             self.label_pic2.setPixmap(QtGui.QPixmap('tmp2.jpg'))
             self.label_pic3.setPixmap(QtGui.QPixmap('tmp3.jpg'))
 
+            self.show()
         else:
             print('매치 가능한 사람이 없음')
             QtWidgets.QMessageBox.about(self, 'fail', 'no more person to match')
             self.back_button_clicked()
 
+    #['match_pass',내아이디,상대아이디]
+    #내 아이디 DB에서 상대 아이디의 is_match값을 -1로 바꿔줌
     def pass_button_clicked(self):
         # ['match_pass', 내id, 상대id]
         self._client.msg_list.append('match_pass')
         self._client.msg_list.append(self._client.my_id)
         self._client.msg_list.append(self.id_yours)
         self.id_yours = ''
+        self._client.client_send()
+        self._client.client_recv()
+
         self.initiate_match()
 
+    #['match_like,내아이디,상대아이디]
+    #내 아이디 DB에서 상대 아이디의 is_match값을 1로 바꿔줌
+    #client lcoal에서 id_내아이디/match에 id_상대아이디 폴더 만들고 프로필, 사진 저장
     def like_button_clicked(self):
+        self._client.msg_list=[]
         #['match_like', 내id, 상대id]
-        self._client.msg_list.append('match_pass')
+        self._client.msg_list.append('match_like')
         self._client.msg_list.append(self._client.my_id)
         self._client.msg_list.append(self.id_yours)
+
+        self._client.client_send()
+        self._client.client_recv()
+        dir_path = os.getcwd() + '/id_' + self._client.my_id
+        fread = open(dir_path+'/match/match_candidate_list.txt','rb')
+        match_list =pickle.loads(fread.read())
+        match_list.append(self.id_yours)
+        fread.close()
+        fwrite = open(dir_path+'/match/match_candidate_list.txt','wb')
+        fwrite.write(pickle.dumps(match_list))
+        fwrite.close()
+
+        dir_path = os.getcwd() + '/id_' + self._client.my_id+'/match/'+'id_'+self.id_yours
+        try:
+            if not (os.path.isdir(dir_path)):
+                os.makedirs(os.path.join(dir_path))
+        except OSError:
+            print('failed to mkdir' + 'id_'+self.id_yours)
+            return
+
+        profile = []
+        profile.append(self.label_nickname_text.text())
+        profile.append(self.label_residence_text.text())
+        profile.append(self.label_hobby_text.text())
+        profile.append(self.label_age_text.text())
+        profile.append(self.label_gender_text.text())
+        f = open(dir_path+'/profile.txt','wb')
+        f.write(pickle.dumps(profile))
+        f.close()
+
+        fread = open('tmp1.jpg','rb')
+        fwrite = open(dir_path+'/me1.jpg','wb')
+        data=fread.read()
+        fwrite.write(data)
+        fread.close()
+        fwrite.close()
+
+        fread = open('tmp2.jpg', 'rb')
+        fwrite = open(dir_path+'/me2.jpg', 'wb')
+        data = fread.read()
+        fwrite.write(data)
+        fread.close()
+        fwrite.close()
+
+        fread = open('tmp3.jpg', 'rb')
+        fwrite = open(dir_path+'/me3.jpg', 'wb')
+        data = fread.read()
+        fwrite.write(data)
+        fread.close()
+        fwrite.close()
+
         self.id_yours = ''
+        #self._client.msg_list=[]
         self.initiate_match()
+
 
     def back_button_clicked(self):
         self._client.number_of_widgets = self._client.number_of_widgets - 1
@@ -184,13 +258,15 @@ class do_match_ui(QtWidgets.QWidget):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Form", "사진3"))
         self.groupBox_2.setTitle(_translate("Form", "상대 프로필"))
         self.label_nickname.setText(_translate("Form", "nickname"))
-        self.label_residence.setText(_translate("Form", "Residence"))
-        self.label_age.setText(_translate("Form", "Age"))
-        self.label_hobby.setText(_translate("Form", "Hobby"))
+        self.label_residence.setText(_translate("Form", "residence"))
+        self.label_age.setText(_translate("Form", "age"))
+        self.label_hobby.setText(_translate("Form", "hobby"))
+        self.label_gender.setText(_translate("Form", "gender"))
         self.label_nickname_text.setText(_translate("Form", "nickname"))
         self.label_residence_text.setText(_translate("Form", "residence"))
         self.label_hobby_text.setText(_translate("Form", "hobby"))
         self.label_age_text.setText(_translate("Form", "age"))
+        self.label_gender_text.setText(_translate("Form", "gender"))
         self.like_button.setText(_translate("Form", "Like"))
         self.pass_button.setText(_translate("Form", "Pass"))
         self.back_button.setText(_translate("Form", "Back"))

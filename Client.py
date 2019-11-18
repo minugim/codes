@@ -112,6 +112,7 @@ class client(QThread):
         try:
             if not (os.path.isdir(dir_path+'/match')):
                 os.makedirs(os.path.join(dir_path+'/match'))
+
         except OSError:
             print('failed to mkdir' + self.msg_list_server[2]+'/match')
             return

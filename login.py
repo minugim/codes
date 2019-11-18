@@ -26,6 +26,9 @@ class login_ui(QtWidgets.QWidget, QtCore.QObject):
         self.setupUi()
 
     def setupUi(self):
+        # disable (but not hide) close button
+        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
+
         self.setObjectName("Form")
         self.resize(750, 520)
 
@@ -114,7 +117,7 @@ class login_ui(QtWidgets.QWidget, QtCore.QObject):
         if self._client.msg_list_server[1]:
             QtWidgets.QMessageBox.about(self, 'login success', 'welcome to here')
             self._client.mkdir()
-            self._client.my_id = copy.deepcopy(self.editline_id.text())
+            self._client.my_id = self.editline_id.text()
             self._client.my_dir = self._client.my_dir + self._client.my_id
             self._client.number_of_widgets = self._client.number_of_widgets - 1
             self.start_main_signal.emit()

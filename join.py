@@ -25,6 +25,9 @@ class join_ui(QtWidgets.QWidget,QtCore.QObject):
         self.setupUi()
 
     def setupUi(self):
+        # disable (but not hide) close button
+        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
+
         self.setObjectName("Form")
         self.resize(750, 520)
 
@@ -212,6 +215,16 @@ class join_ui(QtWidgets.QWidget,QtCore.QObject):
 
         if self._client.msg_list_server[1]:
             self._client.mkdir()
+            matchlist = []
+
+            f = open(os.getcwd() + '/id_' + self.editline_id.text() + '/match/match_candidate_list.txt', 'wb')
+            f.write(pickle.dumps(matchlist))
+            f.close()
+
+            f = open(os.getcwd()+'/id_'+self.editline_id.text() + '/match/match_list.txt', 'wb')
+            f.write(pickle.dumps(matchlist))
+            f.close()
+
             f = open(os.getcwd() + '/id_' + self.editline_id.text() + '/my_profile.txt', 'wb')
             f.write(pickle.dumps(tmp_list))
             f.close()
@@ -220,7 +233,6 @@ class join_ui(QtWidgets.QWidget,QtCore.QObject):
             QtWidgets.QMessageBox.about(self, 'join failed', 'ID already exists')
             return
         print(self._client.msg_list_server[1])
-
 
         self._client.img_resize(self.editline_filepath.text())
         self._client.msg_list.append('img_send')

@@ -9,6 +9,7 @@ import login
 import profile
 import main
 import do_match
+import my_match
 
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -20,6 +21,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.main_uii = main.main_ui(self._client)
         self.do_match_uii = do_match.do_match_ui(self._client)
         self.profile_uii = profile.profile_ui(self._client)
+        self.my_match_uii = my_match.my_match_ui(self._client)
 
         self.login_uii.start_main_signal.connect(self.startMainUI)
         self.login_uii.start_join_signal.connect(self.startJoinUI)
@@ -28,8 +30,9 @@ class MyWindow(QtWidgets.QMainWindow):
         self.profile_uii.start_main_signal.connect(self.startMainUI)
         self.join_uii.start_login_signal.connect(self.startLoginUI)
         self.do_match_uii.start_main_signal.connect(self.startMainUI)
-        '''
+        self.my_match_uii.start_main_signal.connect(self.startMainUI)
         self.main_uii.my_match_button.clicked.connect(self.startMymatchUI)
+        '''
         self.main_uii.statistics_button.clicked.connect(self.startStatisticsUI)
         self.main_uii.random_chat_button.clicked.connect(self.startRandomchatUI)
         '''
@@ -39,33 +42,41 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def startLoginUI(self):
         self._client.number_of_widgets=self._client.number_of_widgets+1
+        #print(f'위젯개수:{self._client.number_of_widgets}')
         self.login_uii.show()
 
     def startJoinUI(self):
         self._client.number_of_widgets=self._client.number_of_widgets+1
+        #print(f'위젯개수:{self._client.number_of_widgets}')
         self.join_uii.show()
 
     def startMainUI(self):
         self._client.number_of_widgets=self._client.number_of_widgets+1
         self.main_uii.count_users()
+        #print(f'위젯개수:{self._client.number_of_widgets}')
         self.main_uii.show()
 
     def startProfileUI(self):
         self._client.number_of_widgets=self._client.number_of_widgets+1
         self.main_uii.close_button_clicked()
+        #print(f'위젯개수:{self._client.number_of_widgets}')
         self.profile_uii.initiate_profile()
         self.profile_uii.show()
 
     def startDomatchUI(self):
         self._client.number_of_widgets = self._client.number_of_widgets + 1
+        self.main_uii.close_button_clicked()
+        #print(f'위젯개수:{self._client.number_of_widgets}')
         self.do_match_uii.initiate_match()
-        self.do_match_uii.show()
+        #self.do_match_uii.show()
 
-    '''
     def startMymatchUI(self):
         self._client.number_of_widgets = self._client.number_of_widgets + 1
-        self.my_match_uii.show()
-        
+        #print(f'위젯개수:{self._client.number_of_widgets}')
+        self.main_uii.close_button_clicked()
+        self.my_match_uii.initiate_my_match()
+        #self.my_match_uii.show()
+    '''
     def startStatisticsUI(self):
         self._client.number_of_widgets = self._client.number_of_widgets + 1
         self.statistics_uii.show()

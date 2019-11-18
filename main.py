@@ -16,6 +16,9 @@ class main_ui(QtWidgets.QWidget):
         self.setupUi()
 
     def setupUi(self):
+        # disable (but not hide) close button
+        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
+
         self.setObjectName("Form")
         self.resize(750, 520)
 
@@ -118,9 +121,8 @@ class main_ui(QtWidgets.QWidget):
         self.close_button.clicked.connect(self.close_button_clicked)
 
     def close_button_clicked(self):
-        tmp = self._client.number_of_widgets - 1
         self._client.number_of_widgets = self._client.number_of_widgets - 1
-        if not tmp:
+        if self._client.number_of_widgets == 0:
             self._client.msg_list.append('close_thread')
             self._client.msg_list.append(self._client.my_id)
             self._client.client_send()

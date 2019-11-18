@@ -9,8 +9,15 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 import os
+import sys
 import pickle
-
+'''
+#상대경로사용
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+'''
 class profile_ui(QtWidgets.QWidget, QtCore.QObject):
     start_main_signal = QtCore.pyqtSignal()
 
@@ -20,6 +27,9 @@ class profile_ui(QtWidgets.QWidget, QtCore.QObject):
         self.setupUi()
 
     def setupUi(self):
+        # disable (but not hide) close button
+        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
+
         self.setObjectName("Form")
         self.resize(750, 520)
 
@@ -187,6 +197,7 @@ class profile_ui(QtWidgets.QWidget, QtCore.QObject):
             #self._client.img_send('resized.jpg')
             #self._client.client_recv()
             self.pic_1.setPixmap(QtGui.QPixmap(self._client.my_dir + '/me1.jpg'))
+            #self.pic_1.setPixmap(QtGui.QPixmap(resource_path('./id_3/me1.jpg')))
             self.pic_2.setPixmap(QtGui.QPixmap(self._client.my_dir + '/me2.jpg'))
             self.pic_3.setPixmap(QtGui.QPixmap(self._client.my_dir + '/me3.jpg'))
 
